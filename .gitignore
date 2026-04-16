@@ -1,0 +1,21 @@
+# Environment
+.env
+*.env
+venv*/
+__pycache__/
+*.pyc
+
+# MacOS
+.DS_Store
+
+# Raw data (too large for git)
+raw_data/
+
+# dbt
+target/
+dbt_project/dbt_packages/
+dbt_project/logs/
+
+# Logs
+logs/
+*.log

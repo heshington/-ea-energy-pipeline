@@ -1,0 +1,39 @@
+version: 2
+
+sources:
+  - name: raw
+    schema: raw
+    description: "Raw tables loaded directly from EA CSV downloads"
+    tables:
+      - name: generation_output
+        description: "Half-hourly generation output per station, unpivoted from EA monthly CSVs"
+        columns:
+          - name: poc_code
+            description: "Point of Connection code — unique station identifier"
+          - name: gen_code
+            description: "Generator/station name"
+          - name: fuel_code
+            description: "Fuel type: Hydro, Gas, Coal, Geo, Wind, Diesel, Wood"
+          - name: tech_code
+            description: "Technology type: Hydro, Geo, Thrml (Thermal), Cogen, Wind"
+          - name: trading_date
+            description: "Calendar date of generation"
+          - name: trading_period
+            description: "Half-hourly trading period (1–48, occasionally 49–50 on DST days)"
+          - name: output_kw
+            description: "Generation output in kilowatts for this half-hour period"
+
+      - name: wholesale_prices
+        description: "Nodal wholesale electricity prices and volumes per trading period"
+        columns:
+          - name: trading_date
+          - name: trading_period
+          - name: node
+            description: "Grid node / Point of Connection"
+          - name: price
+            description: "Final nodal price in NZD/MWh"
+          - name: load_mwh
+          - name: generation_mwh
+
+      - name: retail_prices
+        description: "Regional retail power prices (monthly summary data)"

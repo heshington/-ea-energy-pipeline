@@ -1,0 +1,15 @@
+# Place this file at ~/.dbt/profiles.yml on your machine
+# OR keep it here and run dbt with: dbt run --profiles-dir .
+
+ea_energy:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: localhost
+      port: 5433
+      dbname: ea_energy
+      user: postgres
+      password: password
+      schema: public
+      threads: 4
