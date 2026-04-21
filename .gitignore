@@ -19,3 +19,4 @@ dbt_project/logs/
 # Logs
 logs/
 *.log
+dbt_project/.user.yml
