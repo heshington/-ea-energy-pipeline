@@ -1,0 +1,9 @@
+fuel_category,emission_factor_kg_co2_per_mwh
+Coal,900
+Diesel,800
+Gas,400
+Geothermal,50
+Hydro,0
+Other, 200
+Wind,0
+Wood / Biomass,0
