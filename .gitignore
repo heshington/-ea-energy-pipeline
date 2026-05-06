@@ -20,3 +20,7 @@ dbt_project/logs/
 logs/
 *.log
 dbt_project/.user.yml
+
+# Raw/generated data
+extract/cache/
+extract/*.csv

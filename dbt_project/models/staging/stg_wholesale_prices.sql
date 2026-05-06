@@ -8,8 +8,10 @@ staged as (
         trading_period,
         node,
         price                                           as price_nzd_per_mwh,
-        load_mwh,
-        generation_mwh,
+        load_mw,
+        load_mw * 0.5 as load_mwh,
+        generation_mw,
+        generation_mw * 0.5 as generation_mwh,
 
         -- Flag price spikes (>$500/MWh is considered extreme in NZ market)
         case when price > 500 then true else false end  as is_price_spike,

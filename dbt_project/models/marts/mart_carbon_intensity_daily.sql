@@ -2,6 +2,7 @@
 -- NOTE:
 -- 'Other' fuel category assigned emission factor of 200 kgCO2/MWh
 -- as a blended estimate due to mixed/unknown composition.
+
 with generation as (
 
     select
@@ -30,11 +31,8 @@ daily as (
 
     select
         trading_date,
-
         sum(total_mwh) as total_generation_mwh,
-
         sum(emissions_kg_co2) as total_emissions_kg_co2,
-
         sum(
             case 
                 when emission_factor_kg_co2_per_mwh is null 
@@ -42,28 +40,35 @@ daily as (
                 else 0 
             end
         ) as unmapped_generation_mwh
-
     from joined
     group by trading_date
+
+),
+
+renewables as (
+
+    select
+        trading_date,
+        renewable_pct
+    from {{ ref('mart_price_vs_generation') }}
 
 )
 
 select
-    trading_date,
-    total_generation_mwh,
-    total_emissions_kg_co2,
-
+    d.trading_date,
+    d.total_generation_mwh,
+    d.total_emissions_kg_co2,
     case
-        when total_generation_mwh = 0 then null
-        else total_emissions_kg_co2 / total_generation_mwh
+        when d.total_generation_mwh = 0 then null
+        else d.total_emissions_kg_co2 / d.total_generation_mwh
     end as carbon_intensity_kg_co2_per_mwh,
-
-    unmapped_generation_mwh,
-
+    d.unmapped_generation_mwh,
     case
-        when total_generation_mwh = 0 then null
-        else (total_generation_mwh - unmapped_generation_mwh) / total_generation_mwh
-    end as mapped_generation_pct
-
-from daily
-order by trading_date
+        when d.total_generation_mwh = 0 then null
+        else (d.total_generation_mwh - d.unmapped_generation_mwh) / d.total_generation_mwh
+    end as mapped_generation_pct,
+    r.renewable_pct
+from daily d
+left join renewables r
+    on d.trading_date = r.trading_date
+order by d.trading_date

@@ -3,7 +3,7 @@ version: 2
 sources:
   - name: raw
     schema: raw
-    description: "Raw tables loaded directly from EA CSV downloads"
+    description: "Raw tables loaded by the Python extract scripts (EA CSVs and Open-Meteo API)"
     tables:
       - name: generation_output
         description: "Half-hourly generation output per station, unpivoted from EA monthly CSVs"
@@ -37,3 +37,30 @@ sources:
 
       - name: retail_prices
         description: "Regional retail power prices (monthly summary data)"
+
+      - name: weather_daily
+        description: >
+          Daily weather observations from Open-Meteo's ERA5 historical archive,
+          covering the major NZ hydro catchment lakes plus Lake Taupō.
+          One row per (location, date).
+        columns:
+          - name: location
+            description: "Lake catchment identifier (e.g. lake_pukaki, lake_manapouri)"
+            tests:
+              - not_null
+          - name: time
+            description: "Date of observation in Pacific/Auckland time"
+            tests:
+              - not_null
+          - name: precipitation_sum
+            description: "Total daily liquid-equivalent precipitation (mm)"
+          - name: rain_sum
+            description: "Daily rainfall (mm)"
+          - name: snowfall_sum
+            description: "Daily snowfall depth (cm)"
+          - name: temperature_2m_mean
+            description: "Mean daily air temperature at 2m (°C)"
+          - name: temperature_2m_max
+            description: "Maximum daily air temperature at 2m (°C)"
+          - name: temperature_2m_min
+            description: "Minimum daily air temperature at 2m (°C)"
