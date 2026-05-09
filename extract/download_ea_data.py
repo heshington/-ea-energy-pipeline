@@ -32,7 +32,7 @@ BASE_URL = "https://emidatasets.blob.core.windows.net/publicdata"
 SAS_TOKEN = "?sv=2021-10-04&si=publicdata&sr=c&sig=f034UWz1xmMbk89jd76zY0M%2BwycFDhhumejUrjqlfIw%3D"
 
 # ── Date range ─────────────────────────────────────────────────────────────────
-START_YEAR = 2018
+START_YEAR = 2026
 END_YEAR = datetime.now().year
 
 # ── Local output paths ─────────────────────────────────────────────────────────

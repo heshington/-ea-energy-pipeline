@@ -4,12 +4,14 @@
 venv*/
 __pycache__/
 *.pyc
-
+.ea_proj/
 # MacOS
 .DS_Store
 
 # Raw data (too large for git)
 raw_data/
+cache/
+weather_*.csv
 
 # dbt
 target/
