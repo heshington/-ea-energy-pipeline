@@ -54,51 +54,102 @@ prices_by_node_daily as (
 
 ),
 
-catchment_to_node as (
 
-    -- Catchment → primary downstream hydro station's 220kV GIP.
-    -- Each station is the one that actually converts that catchment's
-    -- inflows into electricity, so the price reflects the local rainfall
-    -- → generation chain.
-    --
-    --   waitaki   Benmore     — chain output station (Pukaki/Tekapo/Ohau feed in)
-    --   clutha    Roxburgh    — main Clutha output (Hawea feeds in via Clyde)
-    --   manapouri Manapouri   — sole station for the Manapouri/Te Anau chain
-    --   waikato   Aratiatia   — first Waikato station, fed directly by Lake Taupō
-    --
-    -- Note: Benmore in this dataset is BEN2202 (220kV bus 2), not BEN2201.
-    select 'waitaki'   as catchment, 'BEN2202' as pricing_node
-    union all select 'manapouri', 'MAN2201'
-    union all select 'clutha',    'ROX2201'
-    union all select 'waikato',   'ARA2201'
+joined as (
+
+    select
+        w.observation_date,
+        w.catchment,
+        w.island,
+        m.pricing_node,
+
+        -- weather measures (catchment-level aggregation)
+        w.total_precip_mm,
+        w.avg_precip_mm,
+        w.total_snowfall_cm,
+        w.mean_temp_c,
+        w.min_temp_c,
+        w.lake_count,
+
+        -- price measures (NULL pre 2020-09-10)
+        p.avg_price_nzd_per_mwh,
+        p.min_price_nzd_per_mwh,
+        p.max_price_nzd_per_mwh,
+        p.total_load_mwh,
+        p.total_generation_mwh,
+        p.spike_periods_count,
+
+        --columns from date dimension
+        d.year,
+        d.month_name,
+        d.day_of_week,
+        d.is_weekend,
+        d.month_year_label
+
+    from weather_by_catchment w
+    inner join {{ ref('dim_concatchment_node') }} m
+        on w.catchment = m.catchment
+    left join prices_by_node_daily p
+        on  m.pricing_node = p.node
+        and w.observation_date = p.trading_date
+    left join {{ref('dim_date')}} d
+        on w.observation_date = d.date_day
+        
+
+),
+
+enriched as (
+
+    -- Helper columns for Power BI exploration. Window functions partition
+    -- by catchment so each chain has its own independent time series.
+    select
+        *,
+
+        -- NZ season tag (Dec-Feb summer, Mar-May autumn, etc.). Useful as
+        -- a slicer when comparing wet-season vs dry-season behaviour.
+        case
+            when extract(month from observation_date) in (12, 1, 2)  then 'summer'
+            when extract(month from observation_date) in (3, 4, 5)   then 'autumn'
+            when extract(month from observation_date) in (6, 7, 8)   then 'winter'
+            when extract(month from observation_date) in (9, 10, 11) then 'spring'
+        end as season,
+
+        -- Wet-day flags. Threshold uses avg_precip_mm (per-lake average)
+        -- so small catchments aren't penalised by being summed across
+        -- fewer lakes. 1mm is the WMO standard "wet day" threshold;
+        -- 25mm is heavy rain.
+        case when avg_precip_mm >= 1.0  then true else false end as is_wet_day,
+        case when avg_precip_mm >= 25.0 then true else false end as is_heavy_rain_day,
+
+        -- Trailing rolling rainfall sums. Boundaries (the first 6/29 days
+        -- of each catchment series) return partial windows rather than NULL,
+        -- which is fine for visualisation — filter them out if you need
+        -- only complete windows.
+        sum(total_precip_mm) over (
+            partition by catchment
+            order by observation_date
+            rows between 6 preceding and current row
+        ) as precip_7d_rolling_sum,
+
+        sum(total_precip_mm) over (
+            partition by catchment
+            order by observation_date
+            rows between 29 preceding and current row
+        ) as precip_30d_rolling_sum,
+
+        -- Lagged prices — each row carries the price observed N days
+        -- *after* the rainfall, so you can scatter total_precip_mm
+        -- against price_lead_Nd directly without DAX window functions.
+        -- The last N rows of each catchment will be NULL (no future
+        -- price data), as expected.
+        lead(avg_price_nzd_per_mwh, 1)  over (partition by catchment order by observation_date) as price_lead_1d,
+        lead(avg_price_nzd_per_mwh, 3)  over (partition by catchment order by observation_date) as price_lead_3d,
+        lead(avg_price_nzd_per_mwh, 7)  over (partition by catchment order by observation_date) as price_lead_7d,
+        lead(avg_price_nzd_per_mwh, 14) over (partition by catchment order by observation_date) as price_lead_14d,
+        lead(avg_price_nzd_per_mwh, 30) over (partition by catchment order by observation_date) as price_lead_30d
+
+    from joined
 
 )
 
-select
-    w.observation_date,
-    w.catchment,
-    w.island,
-    m.pricing_node,
-
-    -- weather measures (catchment-level aggregation)
-    w.total_precip_mm,
-    w.avg_precip_mm,
-    w.total_snowfall_cm,
-    w.mean_temp_c,
-    w.min_temp_c,
-    w.lake_count,
-
-    -- price measures (NULL pre 2020-09-10)
-    p.avg_price_nzd_per_mwh,
-    p.min_price_nzd_per_mwh,
-    p.max_price_nzd_per_mwh,
-    p.total_load_mwh,
-    p.total_generation_mwh,
-    p.spike_periods_count
-
-from weather_by_catchment w
-inner join catchment_to_node m
-    on w.catchment = m.catchment
-left join prices_by_node_daily p
-    on  m.pricing_node = p.node
-    and w.observation_date = p.trading_date
+select * from enriched

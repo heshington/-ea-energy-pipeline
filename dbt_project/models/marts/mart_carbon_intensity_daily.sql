@@ -67,8 +67,18 @@ select
         when d.total_generation_mwh = 0 then null
         else (d.total_generation_mwh - d.unmapped_generation_mwh) / d.total_generation_mwh
     end as mapped_generation_pct,
-    r.renewable_pct
+    r.renewable_pct,
+    --date column columns 
+    dd.date_day,
+    dd.year,
+    dd.month_number,
+    dd.month_name,
+    dd.quarter_in_year,
+    dd.season,
+    dd.month_year_label
 from daily d
 left join renewables r
     on d.trading_date = r.trading_date
+left join {{ ref('dim_date') }} dd
+    on d.trading_date = dd.date_day
 order by d.trading_date

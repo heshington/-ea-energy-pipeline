@@ -4,7 +4,7 @@ with dates as (
 
     select
         generate_series(
-            '2026-01-01'::date,
+            '2018-01-01'::date,
             '2026-12-31'::date,
             interval '1 day'
         )::date as date_day
@@ -42,8 +42,10 @@ select
     else false
 end as is_weekend,
     to_char(date_day, 'Mon YYYY') as month_year_label,
+    extract(year from date_day) * 100 + extract(month from date_day)::int as month_year_sort,
     extract(week from date_day) as week_number,
     to_char(date_day, 'Dy') as day_name_short
+    
     from date_altered
 
 )

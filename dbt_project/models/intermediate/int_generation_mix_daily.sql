@@ -47,12 +47,9 @@ joined as (
             when trading_date between '2021-08-17' and '2021-09-21' then 'Delta Level 4'
             when trading_date between '2021-09-22' and '2021-10-04' then 'Delta Level 3'
             else null
-        end                                         as nz_covid_period,
+        end                                         as nz_covid_period
 
-        extract(year from nd.trading_date)          as year,
-        extract(month from nd.trading_date)         as month,
-        extract(quarter from nd.trading_date)       as quarter,
-        to_char(nd.trading_date, 'YYYY-MM')         as year_month
+       
 
     from national_daily nd
     join totals t using (trading_date)

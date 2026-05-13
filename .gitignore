@@ -26,3 +26,4 @@ dbt_project/.user.yml
 # Raw/generated data
 extract/cache/
 extract/*.csv
+.claude/

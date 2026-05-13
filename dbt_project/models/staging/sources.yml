@@ -32,8 +32,8 @@ sources:
             description: "Grid node / Point of Connection"
           - name: price
             description: "Final nodal price in NZD/MWh"
-          - name: load_mwh
-          - name: generation_mwh
+          - name: load_mw
+          - name: generation_mw
 
       - name: retail_prices
         description: "Regional retail power prices (monthly summary data)"

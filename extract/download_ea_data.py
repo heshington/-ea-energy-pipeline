@@ -18,6 +18,8 @@ What gets downloaded (into ./raw_data/):
 """
 
 import os
+from dotenv import load_dotenv
+load_dotenv()
 import time
 import xml.etree.ElementTree as ET
 from datetime import datetime
@@ -28,8 +30,9 @@ import requests
 from tqdm import tqdm
 
 # ── Azure Blob Storage config ──────────────────────────────────────────────────
-BASE_URL = "https://emidatasets.blob.core.windows.net/publicdata"
-SAS_TOKEN = "?sv=2021-10-04&si=publicdata&sr=c&sig=f034UWz1xmMbk89jd76zY0M%2BwycFDhhumejUrjqlfIw%3D"
+
+BASE_URL = os.getenv("AZURE_BASE_URL")
+SAS_TOKEN = os.getenv("AZURE_SAS_TOKEN")
 
 # ── Date range ─────────────────────────────────────────────────────────────────
 START_YEAR = 2026
